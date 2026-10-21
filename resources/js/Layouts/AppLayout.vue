@@ -7,6 +7,7 @@ import {
     ChartNoAxesCombined,
     ClipboardCheck,
     LayoutDashboard,
+    History,
     LogOut,
     Menu,
     Search,
@@ -42,6 +43,7 @@ const modules = [
     { label: 'رکوردهای من', icon: ChartNoAxesCombined, href: '/my-performance', roles: ['athlete', 'guardian'] },
     { label: 'گزارش‌ها', icon: Activity, href: '/reports', roles: ['club_admin', 'coach', 'finance'] },
     { label: 'اعلان‌ها', icon: Bell, href: '/notifications', roles: ['club_admin', 'finance', 'coach', 'athlete', 'guardian'] },
+    { label: 'تاریخچه فعالیت', icon: History, href: '/activity-log', roles: ['club_admin'] },
     { label: 'تنظیمات باشگاه', icon: Settings, href: '/settings', roles: ['club_admin'] },
 ];
 

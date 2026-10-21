@@ -12,6 +12,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ClubSettingsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -61,6 +62,7 @@ Route::middleware('auth')->group(function (): void {
     });
 
     Route::middleware('role:club_admin')->group(function (): void {
+        Route::get('/activity-log', ActivityLogController::class)->name('activity-log.index');
         Route::get('/settings', [ClubSettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings/club', [ClubSettingsController::class, 'update'])->name('settings.club.update');
         Route::post('/settings/venues', [ClubSettingsController::class, 'storeVenue'])->name('settings.venues.store');

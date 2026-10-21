@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Venue;
 use App\Models\Season;
 use App\Models\ClubNotification;
+use App\Models\ActivityLog;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -225,6 +226,20 @@ class DatabaseSeeder extends Seeder
                     ],
                 );
             }
+        }
+
+        foreach ([
+            [$admin, 'login', 'login.store', 'ورود به سامانه', '2026-10-21 08:12:00'],
+            [$admin, 'create', 'teams.store', 'ایجاد تیم جدید', '2026-10-21 08:35:00'],
+            [$coachOne, 'attendance', 'attendance.mark', 'ثبت حضور و غیاب', '2026-10-21 10:18:00'],
+            [$finance, 'payment', 'finance.pay', 'ثبت دریافت شهریه', '2026-10-21 11:42:00'],
+            [$coachOne, 'create', 'assessments.store', 'ثبت ارزیابی ورزشی', '2026-10-21 14:05:00'],
+            [$admin, 'update', 'settings.club.update', 'ویرایش تنظیمات باشگاه', '2026-10-21 15:24:00'],
+        ] as [$actor, $action, $route, $description, $occurredAt]) {
+            ActivityLog::query()->updateOrCreate(
+                ['club_id' => $club->id, 'user_id' => $actor->id, 'route_name' => $route, 'description' => $description],
+                ['action' => $action, 'method' => $action === 'login' ? 'POST' : 'PATCH', 'ip_address' => '127.0.0.1', 'context' => ['response_status' => 302, 'seeded' => true], 'occurred_at' => $occurredAt],
+            );
         }
     }
 
