@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: volleyball
+      POSTGRES_USER: volleyball
+      POSTGRES_PASSWORD: volleyball_local
+    ports:
+      - "5433:5432"
+    volumes:
+      - volleyball_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U volleyball -d volleyball"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - volleyball_redis:/data
+
+volumes:
+  volleyball_postgres:
+  volleyball_redis:
