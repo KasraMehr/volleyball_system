@@ -1,7 +1,7 @@
 # سند وضعیت سامانه «والیبال من»
 
-**نسخه سند:** 1.1  
-**نسخه محصول:** 0.9.1 MVP  
+**نسخه سند:** 1.2  
+**نسخه محصول:** 0.9.2 MVP  
 **تاریخ تهیه:** ۲۹ مهر ۱۴۰۵ / 21 October 2026  
 **وضعیت:** آماده ارائه و اجرای آزمایشی در باشگاه
 
@@ -84,6 +84,11 @@
 - لینک پرداخت اختصاصی و درگاه Sandbox
 - نمای شهریه برای ورزشکار و والد
 - تفکیک وصول آنلاین و دستی
+- ثبت درخواست پرداخت پیش از انتقال به درگاه
+- شناسه Authority، مهلت اعتبار و وضعیت تراکنش
+- Callback و تأیید غیرتکراری تراکنش
+- شبیه‌ساز مستقل سناریوی موفق و لغو پرداخت
+- معماری Adapter برای اتصال درگاه واقعی
 
 ### ۳.۶ ارزیابی تخصصی والیبال
 
@@ -190,7 +195,7 @@
 
 ### موجودیت‌های اصلی داده
 
-`clubs`, `users`, `teams`, `coach_assignments`, `athletes`, `athlete_guardians`, `team_memberships`, `training_sessions`, `attendance_records`, `fee_plans`, `invoices`, `payments`, `performance_assessments`, `venues`, `seasons`, `club_notifications`, `activity_logs`
+`clubs`, `users`, `teams`, `coach_assignments`, `athletes`, `athlete_guardians`, `team_memberships`, `training_sessions`, `attendance_records`, `fee_plans`, `invoices`, `payments`, `payment_attempts`, `performance_assessments`, `venues`, `seasons`, `club_notifications`, `activity_logs`
 
 ## ۶. حساب‌های نمایشی
 
@@ -206,13 +211,13 @@
 
 این حساب‌ها صرفاً برای دمو هستند و پیش از استقرار باید حذف یا رمز آن‌ها تغییر کند.
 
-## ۷. وضعیت نسخه 0.9.1
+## ۷. وضعیت نسخه 0.9.2
 
 نسخه حاضر یک MVP کامل برای ارائه، دریافت بازخورد و اجرای پایلوت است. گردش‌های اصلی کسب‌وکار از ثبت ورزشکار تا حضور، شهریه، پرداخت، ارزیابی و گزارش به یکدیگر متصل‌اند.
 
 ### موارد لازم پیش از Production
 
-1. اتصال درگاه بانکی واقعی و تأیید Callback
+1. انتخاب درگاه بانکی و افزودن Adapter آن با مرچنت‌کد واقعی
 2. انتخاب سرویس پیامک و ثبت API Key
 3. انتقال دیتابیس به PostgreSQL
 4. تنظیم Queue و Cache با Redis
@@ -232,7 +237,7 @@
 
 ### نسخه 1.0.0
 
-- درگاه بانکی واقعی
+- اتصال Adapter درگاه منتخب با مرچنت‌کد واقعی
 - پیامک واقعی
 - استقرار Production و پشتیبان‌گیری
 
