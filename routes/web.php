@@ -19,6 +19,9 @@ Route::redirect('/', '/dashboard');
 
 Route::get('/pay/{token}', [OnlinePaymentController::class, 'show'])->name('online-payment.show');
 Route::post('/pay/{token}', [OnlinePaymentController::class, 'pay'])->name('online-payment.pay');
+Route::get('/pay/{token}/callback', [OnlinePaymentController::class, 'callback'])->name('online-payment.callback');
+Route::get('/pay/{token}/sandbox/{authority}', [OnlinePaymentController::class, 'sandbox'])->name('online-payment.sandbox');
+Route::post('/pay/{token}/sandbox/{authority}', [OnlinePaymentController::class, 'sandboxComplete'])->name('online-payment.sandbox.complete');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');

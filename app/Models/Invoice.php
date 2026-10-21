@@ -19,6 +19,7 @@ class Invoice extends Model
     public function athlete(): BelongsTo { return $this->belongsTo(Athlete::class); }
     public function feePlan(): BelongsTo { return $this->belongsTo(FeePlan::class); }
     public function payments(): HasMany { return $this->hasMany(Payment::class); }
+    public function paymentAttempts(): HasMany { return $this->hasMany(PaymentAttempt::class); }
 
     public function paidAmount(): int
     {
