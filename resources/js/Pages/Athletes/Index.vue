@@ -6,7 +6,7 @@ import { CheckCircle2, ChevronLeft, Filter, Pencil, Plus, Search, ShieldCheck, T
 
 type Team = { id: number; name: string; color: string };
 type Guardian = { id: number; name: string; phone: string | null; relationship?: string };
-type Athlete = { id: number; membership_number: string; first_name: string; last_name: string; full_name: string; national_code: string | null; phone: string | null; birth_date: string | null; gender: string; position: string | null; jersey_number: number | null; is_active: boolean; emergency_name: string | null; emergency_phone: string | null; medical_notes: string | null; teams: Team[]; guardians: Guardian[] };
+type Athlete = { id: number; membership_number: string; first_name: string; last_name: string; full_name: string; photo_url: string | null; national_code: string | null; phone: string | null; birth_date: string | null; gender: string; position: string | null; jersey_number: number | null; is_active: boolean; emergency_name: string | null; emergency_phone: string | null; medical_notes: string | null; teams: Team[]; guardians: Guardian[] };
 type Paginated = { data: Athlete[]; links: { url: string | null; label: string; active: boolean }[]; total: number; from: number; to: number };
 
 const props = defineProps<{ athletes: Paginated; teams: Team[]; guardians: Guardian[]; filters: { search?: string; team?: string; status?: string }; canManage: boolean }>();
@@ -66,7 +66,7 @@ const paginationLabel = (label: string) => label.replace('&laquo; Previous', 'ق
                     <thead><tr><th>ورزشکار</th><th>کد عضویت</th><th>تیم</th><th>پست / پیراهن</th><th>سرپرست</th><th>وضعیت</th><th /></tr></thead>
                     <tbody>
                         <tr v-for="athlete in athletes.data" :key="athlete.id">
-                            <td><div class="flex items-center gap-3"><div class="athlete-list-avatar">{{ athlete.first_name.slice(0, 1) }}{{ athlete.last_name.slice(0, 1) }}</div><div><strong class="block">{{ athlete.full_name }}</strong><span class="mt-1 block text-[9px] text-[#8a959b]" dir="ltr">{{ athlete.phone || 'بدون شماره تماس' }}</span></div></div></td>
+                            <td><div class="flex items-center gap-3"><div class="athlete-list-avatar overflow-hidden"><img v-if="athlete.photo_url" :src="athlete.photo_url" :alt="athlete.full_name" class="h-full w-full object-cover"><template v-else>{{ athlete.first_name.slice(0, 1) }}{{ athlete.last_name.slice(0, 1) }}</template></div><div><strong class="block">{{ athlete.full_name }}</strong><span class="mt-1 block text-[9px] text-[#8a959b]" dir="ltr">{{ athlete.phone || 'بدون شماره تماس' }}</span></div></div></td>
                             <td><span class="membership-code">{{ athlete.membership_number }}</span></td>
                             <td><div class="flex flex-wrap gap-1"><span v-for="team in athlete.teams" :key="team.id" class="team-chip"><i class="size-1.5 rounded-full" :style="{ background: team.color }" />{{ team.name }}</span></div></td>
                             <td><strong>{{ athlete.position || 'تعیین نشده' }}</strong><span v-if="athlete.jersey_number" class="mr-2 text-[#d76529]">#{{ athlete.jersey_number }}</span></td>
