@@ -53,6 +53,18 @@ const panels = [
     { label: 'مسئول مالی', key: 'finance', href: '/finance' },
     { label: 'ورزشکار', key: 'athlete', href: '/athlete' },
 ];
+
+const mobileModules = computed(() => {
+    const role = user.value?.role || '';
+    const paths: Record<string, string[]> = {
+        club_admin: ['/dashboard', '/athletes', '/attendance', '/finance', '/notifications'],
+        coach: ['/coach', '/athletes', '/attendance', '/assessments', '/notifications'],
+        finance: ['/dashboard', '/athletes', '/finance', '/reports', '/notifications'],
+        athlete: ['/athlete', '/my-payments', '/my-performance', '/notifications'],
+        guardian: ['/athlete', '/my-payments', '/my-performance', '/notifications'],
+    };
+    return (paths[role] || ['/dashboard', '/notifications']).map(path => modules.find(module => module.href === path)).filter((module): module is typeof modules[number] => Boolean(module));
+});
 </script>
 
 <template>
@@ -117,7 +129,7 @@ const panels = [
         </aside>
 
         <div class="lg:mr-[264px]">
-            <header class="sticky top-0 z-30 flex h-[82px] items-center gap-3 border-b border-[#dfe3e6] bg-[#faf9f6]/95 px-4 backdrop-blur md:px-7">
+            <header class="app-header sticky top-0 z-30 flex h-[82px] items-center gap-3 border-b border-[#dfe3e6] bg-[#faf9f6]/95 px-4 backdrop-blur md:px-7">
                 <button class="border border-[#d8dddf] bg-white p-2 lg:hidden" @click="mobileMenuOpen = true"><Menu :size="20" /></button>
                 <div class="min-w-0 flex-1">
                     <p class="text-[10px] font-bold text-[#df6d2b]">{{ eyebrow || 'مرکز عملیات باشگاه' }}</p>
@@ -131,7 +143,14 @@ const panels = [
                 <Link v-if="user?.role === 'club_admin'" href="/settings" class="header-action"><Settings :size="19" /></Link>
             </header>
 
-            <main class="mx-auto max-w-[1540px] p-4 md:p-7 xl:p-8"><slot /></main>
+            <main class="app-main mx-auto max-w-[1540px] p-4 md:p-7 xl:p-8"><slot /></main>
         </div>
+
+        <nav class="mobile-bottom-nav lg:hidden" aria-label="ناوبری اصلی موبایل">
+            <Link v-for="item in mobileModules" :key="item.href" :href="item.href" class="mobile-nav-item" :class="currentPath===item.href?'mobile-nav-active':''">
+                <component :is="item.icon" :size="19" stroke-width="1.8"/><span>{{item.label}}</span>
+                <i v-if="item.href==='/notifications'&&user?.unread_notifications">{{user.unread_notifications>9?'9+':user.unread_notifications}}</i>
+            </Link>
+        </nav>
     </div>
 </template>
