@@ -22,7 +22,7 @@ const greeting=computed(()=>isGuardian.value?`همراه مسیر ${props.athlet
 const attendanceClass=(status:string)=>status==='absent'?'member-dot-absent':status==='excused'?'member-dot-excused':status==='late'?'member-dot-late':'member-dot-present';
 </script>
 
-<template><MemberLayout title="خانه ورزشکار" :payment-href="paymentHref" :performance-href="performanceHref">
+<template><MemberLayout title="خانه ورزشکار" :payment-href="paymentHref" :performance-href="performanceHref" :athlete-id="athlete?.id">
     <section v-if="!athlete" class="member-empty"><Volleyball :size="36"/><h2>هنوز پرونده‌ای متصل نشده</h2><p>برای فعال‌شدن خانه ورزشکار، مدیر باشگاه باید این حساب را به پرونده ورزشی متصل کند.</p></section>
     <template v-else>
         <div v-if="success" class="member-success"><CheckCircle2 :size="17"/>{{success}}</div>
