@@ -17,6 +17,7 @@ use App\Models\Venue;
 use App\Models\Season;
 use App\Models\ClubNotification;
 use App\Models\ActivityLog;
+use App\Models\SmsMessage;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -239,6 +240,18 @@ class DatabaseSeeder extends Seeder
             ActivityLog::query()->updateOrCreate(
                 ['club_id' => $club->id, 'user_id' => $actor->id, 'route_name' => $route, 'description' => $description],
                 ['action' => $action, 'method' => $action === 'login' ? 'POST' : 'PATCH', 'ip_address' => '127.0.0.1', 'context' => ['response_status' => 302, 'seeded' => true], 'occurred_at' => $occurredAt],
+            );
+        }
+
+        foreach ([
+            [$admin, 'sent', 1, 'SMS-DEMO-001', null, '2026-10-22 10:15:00'],
+            [$finance, 'sent', 1, 'SMS-DEMO-002', null, '2026-10-22 10:16:00'],
+            [$coachOne, 'queued', 0, null, null, '2026-10-23 08:40:00'],
+            [$coachTwo, 'failed', 3, null, 'پاسخی از سرویس‌دهنده دریافت نشد.', '2026-10-23 08:42:00'],
+        ] as [$recipient, $status, $attempts, $messageId, $error, $queuedAt]) {
+            SmsMessage::query()->updateOrCreate(
+                ['club_id' => $club->id, 'recipient' => $recipient->phone, 'queued_at' => $queuedAt],
+                ['user_id' => $recipient->id, 'provider' => 'sandbox', 'message' => 'پیامک نمایشی سامانه والیبال من', 'status' => $status, 'provider_message_id' => $messageId, 'attempts' => $attempts, 'last_error' => $error, 'sent_at' => $status === 'sent' ? $queuedAt : null, 'failed_at' => $status === 'failed' ? $queuedAt : null],
             );
         }
     }

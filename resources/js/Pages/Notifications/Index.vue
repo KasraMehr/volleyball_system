@@ -2,11 +2,13 @@
 import { computed, ref, watch } from 'vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
-import { Bell, BellRing, CalendarClock, CheckCheck, CheckCircle2, ChevronLeft, CircleDollarSign, Megaphone, Plus, Send, UsersRound, X } from '@lucide/vue';
+import { Bell, BellRing, CalendarClock, CheckCheck, CheckCircle2, ChevronLeft, CircleDollarSign, Clock3, Megaphone, Plus, RefreshCw, Send, Smartphone, X, XCircle } from '@lucide/vue';
 
 type NotificationRow={id:number;type:string;title:string;message:string;action_url:string|null;sender:string|null;sent_at:string;read:boolean};
 type Paginated={data:NotificationRow[];links:Array<{url:string|null;label:string;active:boolean}>;total:number;from:number;to:number};
-const props=defineProps<{notifications:Paginated;summary:{unread:number;total:number;payment:number};permissions:{announce:boolean;paymentReminder:boolean;trainingReminder:boolean};teams:Array<{id:number;name:string}>;roles:Array<{value:string;label:string}>;automation:{overdueInvoices:number;upcomingSessions:number}}> ();
+type SmsRow={id:number;recipient:string;user:string|null;status:string;attempts:number;provider:string;created_at:string;error:string|null};
+type SmsPanel={enabled:boolean;provider:string;queued:number;sent:number;failed:number;recent:SmsRow[]}|null;
+const props=defineProps<{notifications:Paginated;summary:{unread:number;total:number;payment:number};permissions:{announce:boolean;paymentReminder:boolean;trainingReminder:boolean;smsMonitor:boolean};teams:Array<{id:number;name:string}>;roles:Array<{value:string;label:string}>;automation:{overdueInvoices:number;upcomingSessions:number};sms:SmsPanel}> ();
 const page=usePage();
 const successMessage=computed(()=>page.props.flash?.success as string|null);
 const showCompose=ref(false);
@@ -14,12 +16,14 @@ const form=useForm({title:'',message:'',audience:'all',role:'athlete',team_id:pr
 const sendAnnouncement=()=>form.post('/notifications/announce',{onSuccess:()=>{showCompose.value=false;form.reset();}});
 const paymentReminders=()=>router.post('/notifications/payment-reminders');
 const trainingReminders=()=>router.post('/notifications/training-reminders');
+const retrySms=(id:number)=>router.post(`/notifications/sms/${id}/retry`);
 const readAll=()=>router.patch('/notifications/read-all');
 const read=(item:NotificationRow)=>router.patch(`/notifications/${item.id}/read`);
 const icon=(type:string)=>({payment_reminder:CircleDollarSign,training_reminder:CalendarClock,announcement:Megaphone}[type]||Bell);
 const typeLabel=(type:string)=>({payment_reminder:'امور مالی',training_reminder:'برنامه تمرین',announcement:'اطلاعیه باشگاه'}[type]||'اعلان');
 const dateLabel=(value:string)=>new Intl.DateTimeFormat('fa-IR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(value.replace(' ','T')));
 const paginationLabel=(label:string)=>label.replace('&laquo; Previous','قبلی').replace('Next &raquo;','بعدی');
+const smsStatus=(status:string)=>({queued:{label:'در صف',class:'sms-queued'},sent:{label:'ارسال‌شده',class:'sms-sent'},failed:{label:'ناموفق',class:'sms-failed'}}[status]||{label:status,class:'sms-queued'});
 watch(()=>form.audience,(value)=>{if(value==='team'&&!form.team_id)form.team_id=props.teams[0]?.id||null;});
 </script>
 
@@ -35,6 +39,8 @@ watch(()=>form.audience,(value)=>{if(value==='team'&&!form.team_id)form.team_id=
         <button v-if="permissions.paymentReminder" class="notification-action" :disabled="!automation.overdueInvoices" @click="paymentReminders"><span class="quick-icon"><CircleDollarSign :size="20"/></span><span class="flex-1 text-right"><strong>یادآوری شهریه</strong><small>{{automation.overdueInvoices}} صورتحساب معوق آماده پیگیری</small></span><Send :size="17"/></button>
         <button v-if="permissions.trainingReminder" class="notification-action" :disabled="!automation.upcomingSessions" @click="trainingReminders"><span class="quick-icon"><CalendarClock :size="20"/></span><span class="flex-1 text-right"><strong>یادآوری تمرین</strong><small>{{automation.upcomingSessions}} جلسه در سه روز آینده</small></span><Send :size="17"/></button>
     </div>
+
+    <section v-if="permissions.smsMonitor&&sms" class="panel-flat mt-5"><div class="panel-head"><div><h3>وضعیت ارسال پیامک</h3><p>Provider: {{sms.provider}} · ارسال غیرهمزمان از صف notifications</p></div><span class="status-tag" :class="sms.enabled?'tag-ok':'tag-danger'">{{sms.enabled?'کانال فعال':'کانال غیرفعال'}}</span></div><div class="grid border-b border-[#e4e7e7] sm:grid-cols-3"><div class="sms-metric"><Clock3 :size="19"/><span>در صف<strong>{{sms.queued}}</strong></span></div><div class="sms-metric"><CheckCircle2 :size="19"/><span>ارسال‌شده<strong>{{sms.sent}}</strong></span></div><div class="sms-metric"><XCircle :size="19"/><span>ناموفق<strong>{{sms.failed}}</strong></span></div></div><div class="overflow-x-auto"><table class="sport-table sms-table"><thead><tr><th>گیرنده</th><th>شماره موبایل</th><th>وضعیت</th><th>تلاش</th><th>زمان ایجاد</th><th></th></tr></thead><tbody><tr v-for="item in sms.recent" :key="item.id"><td><strong>{{item.user||'بدون حساب'}}</strong></td><td dir="ltr">{{item.recipient}}</td><td><span class="sms-status" :class="smsStatus(item.status).class">{{smsStatus(item.status).label}}</span></td><td>{{item.attempts}}</td><td>{{dateLabel(item.created_at)}}</td><td><button v-if="item.status==='failed'" class="small-action" @click="retrySms(item.id)"><RefreshCw :size="12"/>تلاش مجدد</button></td></tr><tr v-if="!sms.recent.length"><td colspan="6" class="!py-10 text-center"><Smartphone :size="25" class="mx-auto text-[#a5adb1]"/><p class="mt-2 text-[8px] text-[#879198]">هنوز پیامکی در صف قرار نگرفته است.</p></td></tr></tbody></table></div></section>
 
     <section class="panel-flat mt-5"><div class="panel-head"><div><h3>صندوق اعلان‌های من</h3><p>پیام‌ها و یادآوری‌های مرتبط با حساب شما</p></div><button v-if="summary.unread" class="small-action" @click="readAll"><CheckCheck :size="14"/>خواندن همه</button></div>
         <div class="divide-y divide-[#e5e8e8]"><button v-for="item in notifications.data" :key="item.id" class="notification-row" :class="{'notification-unread':!item.read}" @click="read(item)"><div class="notification-type"><component :is="icon(item.type)" :size="19"/></div><div class="min-w-0 flex-1 text-right"><div class="flex flex-wrap items-center gap-2"><span class="text-[8px] font-black text-[#d5652b]">{{typeLabel(item.type)}}</span><span v-if="!item.read" class="size-1.5 rounded-full bg-[#e87532]"/></div><strong>{{item.title}}</strong><p>{{item.message}}</p><small>{{dateLabel(item.sent_at)}}<template v-if="item.sender"> · توسط {{item.sender}}</template></small></div><ChevronLeft v-if="item.action_url" :size="18" class="text-[#859198]"/></button><div v-if="!notifications.data.length" class="p-12 text-center"><Bell :size="28" class="mx-auto text-[#a5adb1]"/><p class="mt-3 text-[10px] text-[#879198]">هنوز اعلانی برای شما ثبت نشده است.</p></div></div>
