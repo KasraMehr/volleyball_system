@@ -8,6 +8,8 @@ use App\Models\Invoice;
 use App\Models\Team;
 use App\Models\TrainingSession;
 use App\Models\User;
+use App\Models\SmsMessage;
+use App\Jobs\SendSmsMessage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,6 +38,7 @@ class NotificationController extends Controller
                 'announce' => $user->hasRole(UserRole::ClubAdmin),
                 'paymentReminder' => $user->hasRole(UserRole::ClubAdmin, UserRole::Finance),
                 'trainingReminder' => $user->hasRole(UserRole::ClubAdmin, UserRole::Coach),
+                'smsMonitor' => $user->hasRole(UserRole::ClubAdmin, UserRole::Finance),
             ],
             'teams' => $this->availableTeams($request)->map(fn (Team $team) => ['id' => $team->id, 'name' => $team->name]),
             'roles' => collect(UserRole::cases())->map(fn (UserRole $role) => ['value' => $role->value, 'label' => $role->label()]),
@@ -43,6 +46,17 @@ class NotificationController extends Controller
                 'overdueInvoices' => Invoice::query()->where('club_id', $user->club_id)->whereIn('status', ['unpaid', 'partial'])->whereDate('due_date', '<', today())->count(),
                 'upcomingSessions' => TrainingSession::query()->where('club_id', $user->club_id)->whereIn('team_id', $this->availableTeams($request)->pluck('id'))->where('status', 'scheduled')->whereBetween('session_date', [today(), today()->addDays(3)])->count(),
             ],
+            'sms' => $user->hasRole(UserRole::ClubAdmin, UserRole::Finance) ? [
+                'enabled' => config('sms.enabled'),
+                'provider' => config('sms.default'),
+                'queued' => SmsMessage::query()->where('club_id', $user->club_id)->where('status', 'queued')->count(),
+                'sent' => SmsMessage::query()->where('club_id', $user->club_id)->where('status', 'sent')->count(),
+                'failed' => SmsMessage::query()->where('club_id', $user->club_id)->where('status', 'failed')->count(),
+                'recent' => SmsMessage::query()->where('club_id', $user->club_id)->with('user:id,name')->latest()->limit(8)->get()->map(fn (SmsMessage $sms) => [
+                    'id' => $sms->id, 'recipient' => $sms->recipient, 'user' => $sms->user?->name, 'status' => $sms->status,
+                    'attempts' => $sms->attempts, 'provider' => $sms->provider, 'created_at' => $sms->created_at->format('Y-m-d H:i'), 'error' => $sms->last_error,
+                ]),
+            ] : null,
         ]);
     }
 
@@ -107,11 +121,26 @@ class NotificationController extends Controller
         return back()->with('success', 'همه اعلان‌ها خوانده‌شده علامت خوردند.');
     }
 
+    public function retrySms(Request $request, SmsMessage $sms): RedirectResponse
+    {
+        abort_unless($request->user()->hasRole(UserRole::ClubAdmin, UserRole::Finance) && $sms->club_id === $request->user()->club_id, 403);
+        abort_unless($sms->status === 'failed', 422);
+        $sms->update(['status' => 'queued', 'failed_at' => null, 'last_error' => null]);
+        SendSmsMessage::dispatch($sms->id);
+        return back()->with('success', 'پیامک دوباره در صف ارسال قرار گرفت.');
+    }
+
     private function deliver(Request $request, Collection $recipients, string $type, string $title, string $message, ?string $actionUrl, array $metadata): void
     {
-        $now = now();
-        $rows = $recipients->unique()->map(fn (int $userId) => ['club_id' => $request->user()->club_id, 'user_id' => $userId, 'sender_id' => $request->user()->id, 'type' => $type, 'title' => $title, 'message' => $message, 'action_url' => $actionUrl, 'channel' => 'in_app', 'delivery_status' => 'delivered', 'metadata' => json_encode($metadata), 'sent_at' => $now, 'created_at' => $now, 'updated_at' => $now])->all();
-        if ($rows) { DB::table('club_notifications')->insert($rows); }
+        $users = User::query()->whereIn('id', $recipients->unique())->get(['id', 'club_id', 'phone']);
+        DB::transaction(function () use ($request, $users, $type, $title, $message, $actionUrl, $metadata): void {
+            foreach ($users as $user) {
+                $notification = ClubNotification::create(['club_id' => $request->user()->club_id, 'user_id' => $user->id, 'sender_id' => $request->user()->id, 'type' => $type, 'title' => $title, 'message' => $message, 'action_url' => $actionUrl, 'channel' => 'in_app', 'delivery_status' => 'delivered', 'metadata' => $metadata, 'sent_at' => now()]);
+                if (! config('sms.enabled') || blank($user->phone)) continue;
+                $sms = SmsMessage::create(['club_id' => $user->club_id, 'user_id' => $user->id, 'club_notification_id' => $notification->id, 'provider' => config('sms.default'), 'recipient' => $user->phone, 'message' => $title."\n".$message, 'status' => 'queued', 'queued_at' => now()]);
+                SendSmsMessage::dispatch($sms->id)->afterCommit();
+            }
+        });
     }
 
     private function teamRecipientIds(int $teamId): Collection

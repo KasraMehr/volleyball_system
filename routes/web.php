@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/notifications/announce', [NotificationController::class, 'announce'])->middleware('role:club_admin')->name('notifications.announce');
     Route::post('/notifications/payment-reminders', [NotificationController::class, 'paymentReminders'])->middleware('role:club_admin,finance')->name('notifications.payment-reminders');
     Route::post('/notifications/training-reminders', [NotificationController::class, 'trainingReminders'])->middleware('role:club_admin,coach')->name('notifications.training-reminders');
+    Route::post('/notifications/sms/{sms}/retry', [NotificationController::class, 'retrySms'])->middleware('role:club_admin,finance')->name('notifications.sms.retry');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/coach', [DashboardController::class, 'coach'])->middleware('role:club_admin,coach')->name('coach');
     Route::middleware('role:club_admin,finance')->group(function (): void {

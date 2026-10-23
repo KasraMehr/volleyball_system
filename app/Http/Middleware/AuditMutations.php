@@ -75,6 +75,7 @@ class AuditMutations
             'assessments.store' => 'ثبت ارزیابی ورزشی',
             'settings.club.update' => 'ویرایش تنظیمات باشگاه', 'settings.venues.store' => 'ثبت سالن جدید', 'settings.venues.toggle' => 'تغییر وضعیت سالن', 'settings.seasons.store' => 'ثبت فصل ورزشی', 'settings.seasons.activate' => 'تغییر فصل جاری',
             'notifications.announce' => 'ارسال اطلاعیه باشگاه', 'notifications.payment-reminders' => 'تولید یادآوری شهریه', 'notifications.training-reminders' => 'تولید یادآوری تمرین',
+            'notifications.sms.retry' => 'تلاش مجدد برای ارسال پیامک',
         ][$route] ?? 'انجام عملیات در سامانه';
     }
 }
