@@ -6,6 +6,7 @@ import {
     Bell,
     ChartNoAxesCombined,
     ClipboardCheck,
+    Dumbbell,
     LayoutDashboard,
     History,
     LogOut,
@@ -37,6 +38,7 @@ const modules = [
     { label: 'ورزشکاران', icon: UsersRound, href: '/athletes', roles: ['club_admin', 'coach', 'finance'] },
     { label: 'تیم‌ها و رده‌ها', icon: Volleyball, href: '/teams', roles: ['club_admin'] },
     { label: 'حضور و غیاب', icon: ClipboardCheck, href: '/attendance', roles: ['club_admin', 'coach'] },
+    { label: 'برنامه تمرینی', icon: Dumbbell, href: '/training-plans', roles: ['club_admin', 'coach'] },
     { label: 'شهریه و پرداخت', icon: WalletCards, href: '/finance', roles: ['club_admin', 'finance'] },
     { label: 'شهریه من', icon: WalletCards, href: '/my-payments', roles: ['athlete', 'guardian'] },
     { label: 'ارزیابی عملکرد', icon: ChartNoAxesCombined, href: '/assessments', roles: ['club_admin', 'coach'] },
@@ -60,7 +62,7 @@ const mobileModules = computed(() => {
     const role = user.value?.role || '';
     const paths: Record<string, string[]> = {
         club_admin: ['/dashboard', '/athletes', '/attendance', '/finance', '/notifications'],
-        coach: ['/coach', '/athletes', '/attendance', '/assessments', '/notifications'],
+        coach: ['/coach', '/athletes', '/attendance', '/training-plans', '/notifications'],
         finance: ['/dashboard', '/athletes', '/finance', '/reports', '/notifications'],
         athlete: ['/athlete', '/my-payments', '/my-performance', '/notifications'],
         guardian: ['/athlete', '/my-payments', '/my-performance', '/notifications'],

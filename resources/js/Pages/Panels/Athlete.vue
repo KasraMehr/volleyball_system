@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import MemberLayout from '../../Layouts/MemberLayout.vue';
-import { ArrowLeft, Bell, CalendarDays, Camera, Check, CheckCircle2, ChevronLeft, CircleDollarSign, Clock3, CreditCard, Flame, MapPin, Medal, ShieldCheck, Sparkles, Target, TrendingUp, Upload, Volleyball } from '@lucide/vue';
+import { ArrowLeft, Bell, CalendarDays, Camera, Check, CheckCircle2, ChevronLeft, CircleDollarSign, Clock3, CreditCard, Dumbbell, Flame, MapPin, Medal, ShieldCheck, Sparkles, Target, TrendingUp, Upload, Volleyball } from '@lucide/vue';
 
 type Attendance={status:string;date:string};
 type Athlete={id:number;name:string;initials:string;membership_number:string;jersey_number:number|null;position:string|null;team:string|null;team_color:string|null;coach:string|null;is_active:boolean;photo_url:string|null;attendance_rate:number;sessions_count:number;streak:number;recent_attendance:Attendance[];assessment:{date:string;height_cm:number|null;vertical_jump_cm:number|null;spike_reach_cm:number|null;block_reach_cm:number|null;jump_change:number|null;coach_notes:string|null}|null};
@@ -48,7 +48,7 @@ const attendanceClass=(status:string)=>status==='absent'?'member-dot-absent':sta
             <section class="member-goal"><div class="member-goal-icon"><Target :size="23"/></div><span>هدف بعدی با مربی {{athlete.coach||''}}</span><h2>{{athlete.assessment?.coach_notes||'با استمرار در تمرین‌ها، رکورد بعدی نزدیک‌تر از همیشه است.'}}</h2><div><Sparkles :size="15"/>{{athlete.assessment?.jump_change&&athlete.assessment.jump_change>0?`${athlete.assessment.jump_change} سانتی‌متر پیشرفت پرش`:'مسیر پیشرفت فعال است'}}</div></section>
         </div>
 
-        <section class="member-actions"><Link :href="performanceHref"><span class="blue"><TrendingUp :size="20"/></span><div><strong>رکوردها و پیشرفت</strong><small>نمودار پرش، اسپک و دفاع</small></div><ChevronLeft :size="18"/></Link><Link :href="paymentHref"><span class="orange"><CreditCard :size="20"/></span><div><strong>شهریه و پرداخت‌ها</strong><small>صورتحساب‌ها و رسیدها</small></div><ChevronLeft :size="18"/></Link><Link href="/notifications"><span class="green"><Bell :size="20"/></span><div><strong>پیام‌های باشگاه</strong><small>تمرین، اطلاعیه و یادآوری‌ها</small></div><ChevronLeft :size="18"/></Link></section>
+        <section class="member-actions"><Link :href="`/my-training?athlete=${athlete.id}`"><span class="orange"><Dumbbell :size="20"/></span><div><strong>برنامه تمرینی من</strong><small>حرکت‌ها و گزارش انجام تمرین</small></div><ChevronLeft :size="18"/></Link><Link :href="performanceHref"><span class="blue"><TrendingUp :size="20"/></span><div><strong>رکوردها و پیشرفت</strong><small>نمودار پرش، اسپک و دفاع</small></div><ChevronLeft :size="18"/></Link><Link :href="paymentHref"><span class="orange"><CreditCard :size="20"/></span><div><strong>شهریه و پرداخت‌ها</strong><small>صورتحساب‌ها و رسیدها</small></div><ChevronLeft :size="18"/></Link><Link href="/notifications"><span class="green"><Bell :size="20"/></span><div><strong>پیام‌های باشگاه</strong><small>تمرین، اطلاعیه و یادآوری‌ها</small></div><ChevronLeft :size="18"/></Link></section>
         <div class="member-trust"><ShieldCheck :size="15"/>اطلاعات این پرونده فقط برای ورزشکار، والد متصل و افراد مجاز باشگاه نمایش داده می‌شود.</div>
     </template>
 </MemberLayout></template>

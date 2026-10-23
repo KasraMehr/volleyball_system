@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { Bell, ChartNoAxesCombined, CreditCard, Home, LogOut, Volleyball } from '@lucide/vue';
+import { Bell, ChartNoAxesCombined, CreditCard, Dumbbell, Home, LogOut, Volleyball } from '@lucide/vue';
 
 const props=withDefaults(defineProps<{title:string;paymentHref?:string;performanceHref?:string;athleteId?:number|null}>(),{paymentHref:'/my-payments',performanceHref:'/my-performance',athleteId:null});
 const page=usePage();
 const user=computed(()=>page.props.auth?.user as {name:string;role:string;unread_notifications:number}|null);
 const path=computed(()=>page.url.split('?')[0]);
-const withAthlete=(href:string)=>props.athleteId&&['/athlete','/my-payments','/my-performance'].includes(href)?`${href}?athlete=${props.athleteId}`:href;
-const links=computed(()=>[{label:'خانه',href:withAthlete('/athlete'),icon:Home,base:'/athlete'},{label:'شهریه',href:withAthlete(props.paymentHref),icon:CreditCard,base:'/my-payments'},{label:'پیشرفت من',href:withAthlete(props.performanceHref),icon:ChartNoAxesCombined,base:'/my-performance'},{label:'پیام‌ها',href:'/notifications',icon:Bell,base:'/notifications'}]);
+const withAthlete=(href:string)=>props.athleteId&&['/athlete','/my-training','/my-payments','/my-performance'].includes(href)?`${href}?athlete=${props.athleteId}`:href;
+const links=computed(()=>[{label:'خانه',href:withAthlete('/athlete'),icon:Home,base:'/athlete'},{label:'تمرین من',href:withAthlete('/my-training'),icon:Dumbbell,base:'/my-training'},{label:'شهریه',href:withAthlete(props.paymentHref),icon:CreditCard,base:'/my-payments'},{label:'پیشرفت',href:withAthlete(props.performanceHref),icon:ChartNoAxesCombined,base:'/my-performance'},{label:'پیام‌ها',href:'/notifications',icon:Bell,base:'/notifications'}]);
 </script>
 
 <template><Head :title="title"/><div class="member-shell min-h-screen text-[#102236]" dir="rtl">

@@ -2,14 +2,14 @@
 import { computed, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import MemberLayout from '../../Layouts/MemberLayout.vue';
-import { Bell, CalendarClock, CheckCheck, ChevronLeft, CircleDollarSign, Megaphone, MessageCircle, Sparkles } from '@lucide/vue';
+import { Bell, CalendarClock, CheckCheck, ChevronLeft, CircleDollarSign, Dumbbell, Megaphone, MessageCircle, Sparkles } from '@lucide/vue';
 type Row={id:number;type:string;title:string;message:string;action_url:string|null;sender:string|null;sent_at:string;read:boolean};
 type Paginated={data:Row[];links:Array<{url:string|null;label:string;active:boolean}>;total:number;from:number;to:number};
 const props=defineProps<{notifications:Paginated;summary:{unread:number;total:number;payment:number}}>();
 const filter=ref<'all'|'unread'>('all'); const page=usePage();
 const rows=computed(()=>filter.value==='unread'?props.notifications.data.filter(item=>!item.read):props.notifications.data);
-const icon=(type:string)=>({payment_reminder:CircleDollarSign,training_reminder:CalendarClock,announcement:Megaphone}[type]||Bell);
-const label=(type:string)=>({payment_reminder:'شهریه',training_reminder:'تمرین',announcement:'باشگاه'}[type]||'پیام');
+const icon=(type:string)=>({payment_reminder:CircleDollarSign,training_reminder:CalendarClock,training_plan:Dumbbell,announcement:Megaphone}[type]||Bell);
+const label=(type:string)=>({payment_reminder:'شهریه',training_reminder:'جلسه تمرین',training_plan:'برنامه تمرینی',announcement:'باشگاه'}[type]||'پیام');
 const dateLabel=(value:string)=>new Intl.DateTimeFormat('fa-IR',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(value.replace(' ','T')));
 const readAll=()=>router.patch('/notifications/read-all',{}, {preserveScroll:true});
 const open=(item:Row)=>{if(item.read){if(item.action_url)router.visit(item.action_url);return;}router.patch(`/notifications/${item.id}/read`,{}, {preserveScroll:true,onSuccess:()=>{if(item.action_url)router.visit(item.action_url);}});};
