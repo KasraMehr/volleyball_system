@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -123,6 +124,17 @@ class AthleteController extends Controller
         return back()->with('success', 'وضعیت عضویت ورزشکار تغییر کرد.');
     }
 
+    public function photo(Request $request, Athlete $athlete): RedirectResponse
+    {
+        $this->authorizeVisible($request, $athlete);
+        abort_unless($request->user()->hasRole(UserRole::ClubAdmin, UserRole::Athlete, UserRole::Guardian), 403);
+        $data = $request->validate(['photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
+        $path = $data['photo']->store("athletes/{$athlete->club_id}", 'public');
+        if ($athlete->photo_path) Storage::disk('public')->delete($athlete->photo_path);
+        $athlete->update(['photo_path' => $path]);
+        return back()->with('success', 'عکس ورزشکار با موفقیت به‌روزرسانی شد.');
+    }
+
     private function validated(Request $request, ?Athlete $athlete = null): array
     {
         $clubId = $request->user()->club_id;
@@ -167,6 +179,7 @@ class AthleteController extends Controller
             'full_name' => $athlete->full_name,
             'national_code' => $athlete->national_code,
             'phone' => $athlete->phone,
+            'photo_url' => $athlete->photo_path ? Storage::disk('public')->url($athlete->photo_path) : null,
             'birth_date' => $athlete->birth_date?->format('Y-m-d'),
             'gender' => $athlete->gender,
             'position' => $athlete->position,

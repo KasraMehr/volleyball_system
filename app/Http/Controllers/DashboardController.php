@@ -11,6 +11,7 @@ use App\Models\TrainingSession;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -109,14 +110,30 @@ class DashboardController extends Controller
     public function athlete(Request $request): Response
     {
         $user = $request->user();
-        $athlete = $user->hasRole(UserRole::ClubAdmin)
-            ? Athlete::query()->where('club_id', $user->club_id)->with(['teams:id,name', 'latestAssessment'])->first()
-            : Athlete::query()->visibleTo($user)->with(['teams:id,name', 'latestAssessment'])->first();
+        $visibleAthletes = Athlete::query()->visibleTo($user)->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'photo_path']);
+        $selectedId = $request->integer('athlete');
+        $athlete = Athlete::query()->visibleTo($user)
+            ->when($selectedId, fn (Builder $query) => $query->whereKey($selectedId))
+            ->with(['teams:id,name,color', 'teams.coaches:id,name', 'latestAssessment'])
+            ->first();
+        if (! $athlete && $selectedId) {
+            $athlete = Athlete::query()->visibleTo($user)
+                ->with(['teams:id,name,color', 'teams.coaches:id,name', 'latestAssessment'])
+                ->first();
+        }
         $invoice = $athlete ? Invoice::query()->where('athlete_id', $athlete->id)
             ->withSum(['payments as paid_amount' => fn (Builder $query) => $query->where('status', 'successful')], 'amount')
             ->where('status', '!=', 'paid')->orderBy('due_date')->first() : null;
+        $teamIds = $athlete?->teams->pluck('id') ?? collect();
+        $nextSession = $athlete ? TrainingSession::query()->whereIn('team_id', $teamIds)->where('status', 'scheduled')->whereDate('session_date', '>=', today())->orderBy('session_date')->orderBy('starts_at')->first() : null;
+        $attendance = $athlete?->attendanceRecords()->with('trainingSession:id,session_date')->where('status', '!=', 'unmarked')->latest('marked_at')->limit(12)->get() ?? collect();
+        $attendanceTotal = $athlete?->attendanceRecords()->where('status', '!=', 'unmarked')->count() ?? 0;
+        $attendancePresent = $athlete?->attendanceRecords()->whereIn('status', ['present', 'late'])->count() ?? 0;
+        $previousAssessment = $athlete?->performanceAssessments()->when($athlete?->latestAssessment, fn (Builder $query) => $query->where('id', '!=', $athlete->latestAssessment->id))->latest('assessment_date')->first();
 
         return Inertia::render('Panels/Athlete', [
+            'viewer' => ['mode' => $user->role->value, 'name' => $user->name],
+            'profiles' => $visibleAthletes->map(fn (Athlete $profile) => ['id' => $profile->id, 'name' => $profile->full_name, 'photo_url' => $profile->photo_path ? Storage::disk('public')->url($profile->photo_path) : null]),
             'athlete' => $athlete ? [
                 'id' => $athlete->id,
                 'name' => $athlete->full_name,
@@ -126,14 +143,24 @@ class DashboardController extends Controller
                 'position' => $athlete->position,
                 'team' => $athlete->teams->first()?->name,
                 'is_active' => $athlete->is_active,
+                'photo_url' => $athlete->photo_path ? Storage::disk('public')->url($athlete->photo_path) : null,
+                'team_color' => $athlete->teams->first()?->color,
+                'coach' => $athlete->teams->first()?->coaches->first()?->name,
+                'attendance_rate' => $attendanceTotal ? (int) round(($attendancePresent / $attendanceTotal) * 100) : 0,
+                'sessions_count' => $attendanceTotal,
+                'streak' => $attendance->takeUntil(fn ($record) => ! in_array($record->status, ['present', 'late'], true))->count(),
+                'recent_attendance' => $attendance->take(8)->reverse()->values()->map(fn ($record) => ['status' => $record->status, 'date' => $record->trainingSession?->session_date?->format('Y-m-d')]),
                 'assessment' => $athlete->latestAssessment ? [
                     'date' => $athlete->latestAssessment->assessment_date->format('Y-m-d'),
                     'height_cm' => $athlete->latestAssessment->height_cm,
                     'vertical_jump_cm' => $athlete->latestAssessment->vertical_jump_cm,
                     'spike_reach_cm' => $athlete->latestAssessment->spike_reach_cm,
                     'block_reach_cm' => $athlete->latestAssessment->block_reach_cm,
+                    'jump_change' => $athlete->latestAssessment->vertical_jump_cm !== null && $previousAssessment?->vertical_jump_cm !== null ? round($athlete->latestAssessment->vertical_jump_cm - $previousAssessment->vertical_jump_cm, 1) : null,
+                    'coach_notes' => $athlete->latestAssessment->coach_notes,
                 ] : null,
             ] : null,
+            'nextSession' => $nextSession ? ['date' => $nextSession->session_date->format('Y-m-d'), 'starts_at' => substr($nextSession->starts_at, 0, 5), 'location' => $nextSession->location, 'title' => $nextSession->title] : null,
             'invoice' => $invoice ? [
                 'title' => $invoice->title,
                 'outstanding' => max(0, $invoice->payableAmount() - (int) ($invoice->paid_amount ?? 0)),

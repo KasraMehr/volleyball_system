@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['club_id', 'user_id', 'membership_number', 'national_code', 'first_name', 'last_name', 'phone', 'emergency_name', 'emergency_phone', 'birth_date', 'gender', 'position', 'jersey_number', 'medical_notes', 'is_active'])]
+#[Fillable(['club_id', 'user_id', 'membership_number', 'national_code', 'first_name', 'last_name', 'phone', 'photo_path', 'emergency_name', 'emergency_phone', 'birth_date', 'gender', 'position', 'jersey_number', 'medical_notes', 'is_active'])]
 class Athlete extends Model
 {
     protected function casts(): array

@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/my-performance', [AssessmentController::class, 'mine'])->middleware('role:athlete,guardian')->name('assessments.mine');
     Route::get('/athletes', [AthleteController::class, 'index'])->middleware('role:club_admin,coach,finance')->name('athletes.index');
     Route::get('/athletes/{athlete}', [AthleteController::class, 'show'])->middleware('role:club_admin,coach,finance,athlete,guardian')->name('athletes.show');
+    Route::post('/athletes/{athlete}/photo', [AthleteController::class, 'photo'])->middleware('role:club_admin,athlete,guardian')->name('athletes.photo');
     Route::middleware('role:club_admin,coach,finance')->group(function (): void {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export/{type}', [ReportController::class, 'export'])->name('reports.export');

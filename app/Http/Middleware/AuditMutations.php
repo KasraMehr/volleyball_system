@@ -70,6 +70,7 @@ class AuditMutations
             'users.store' => 'ایجاد حساب کاربری', 'users.toggle' => 'تغییر وضعیت حساب کاربری',
             'teams.store' => 'ایجاد تیم جدید', 'teams.update' => 'ویرایش اطلاعات تیم', 'teams.toggle' => 'تغییر وضعیت تیم',
             'athletes.store' => 'ثبت ورزشکار جدید', 'athletes.update' => 'ویرایش پرونده ورزشکار', 'athletes.toggle' => 'تغییر وضعیت ورزشکار',
+            'athletes.photo' => 'به‌روزرسانی عکس ورزشکار',
             'attendance.store' => 'ایجاد جلسه تمرین', 'attendance.mark' => 'ثبت حضور و غیاب', 'attendance.complete' => 'نهایی کردن جلسه تمرین',
             'finance.issue' => 'صدور گروهی شهریه', 'finance.pay' => 'ثبت دریافت شهریه', 'online-payment.pay' => 'پرداخت آنلاین شهریه',
             'assessments.store' => 'ثبت ارزیابی ورزشی',
