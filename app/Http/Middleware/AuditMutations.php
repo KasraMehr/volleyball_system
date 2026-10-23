@@ -74,6 +74,7 @@ class AuditMutations
             'attendance.store' => 'ایجاد جلسه تمرین', 'attendance.mark' => 'ثبت حضور و غیاب', 'attendance.complete' => 'نهایی کردن جلسه تمرین',
             'finance.issue' => 'صدور گروهی شهریه', 'finance.pay' => 'ثبت دریافت شهریه', 'online-payment.pay' => 'پرداخت آنلاین شهریه',
             'assessments.store' => 'ثبت ارزیابی ورزشی',
+            'workouts.store' => 'ایجاد برنامه تمرینی', 'workouts.status' => 'تغییر وضعیت برنامه تمرینی', 'workouts.complete' => 'ثبت انجام تمرین توسط ورزشکار',
             'settings.club.update' => 'ویرایش تنظیمات باشگاه', 'settings.venues.store' => 'ثبت سالن جدید', 'settings.venues.toggle' => 'تغییر وضعیت سالن', 'settings.seasons.store' => 'ثبت فصل ورزشی', 'settings.seasons.activate' => 'تغییر فصل جاری',
             'notifications.announce' => 'ارسال اطلاعیه باشگاه', 'notifications.payment-reminders' => 'تولید یادآوری شهریه', 'notifications.training-reminders' => 'تولید یادآوری تمرین',
             'notifications.sms.retry' => 'تلاش مجدد برای ارسال پیامک',

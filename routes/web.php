@@ -13,6 +13,7 @@ use App\Http\Controllers\ClubSettingsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\WorkoutPlanController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -47,6 +48,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/athlete', [DashboardController::class, 'athlete'])->middleware('role:club_admin,athlete,guardian')->name('athlete');
     Route::get('/my-payments', [FinanceController::class, 'mine'])->middleware('role:athlete,guardian')->name('finance.mine');
     Route::get('/my-performance', [AssessmentController::class, 'mine'])->middleware('role:athlete,guardian')->name('assessments.mine');
+    Route::get('/my-training', [WorkoutPlanController::class, 'mine'])->middleware('role:athlete,guardian')->name('workouts.mine');
+    Route::patch('/my-training/exercises/{exercise}', [WorkoutPlanController::class, 'complete'])->middleware('role:athlete')->name('workouts.complete');
     Route::get('/athletes', [AthleteController::class, 'index'])->middleware('role:club_admin,coach,finance')->name('athletes.index');
     Route::get('/athletes/{athlete}', [AthleteController::class, 'show'])->middleware('role:club_admin,coach,finance,athlete,guardian')->name('athletes.show');
     Route::post('/athletes/{athlete}/photo', [AthleteController::class, 'photo'])->middleware('role:club_admin,athlete,guardian')->name('athletes.photo');
@@ -56,6 +59,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/reports/print/{type}', [ReportController::class, 'print'])->name('reports.print');
     });
     Route::middleware('role:club_admin,coach')->group(function (): void {
+        Route::get('/training-plans', [WorkoutPlanController::class, 'index'])->name('workouts.index');
+        Route::post('/training-plans', [WorkoutPlanController::class, 'store'])->name('workouts.store');
+        Route::patch('/training-plans/{plan}/status', [WorkoutPlanController::class, 'status'])->name('workouts.status');
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
         Route::get('/attendance/{session}', [AttendanceController::class, 'show'])->name('attendance.show');

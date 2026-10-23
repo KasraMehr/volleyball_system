@@ -18,6 +18,7 @@ use App\Models\Season;
 use App\Models\ClubNotification;
 use App\Models\ActivityLog;
 use App\Models\SmsMessage;
+use App\Models\WorkoutPlan;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -227,6 +228,20 @@ class DatabaseSeeder extends Seeder
                     ],
                 );
             }
+        }
+
+        $workout = WorkoutPlan::query()->updateOrCreate(
+            ['club_id' => $club->id, 'title' => 'دوره افزایش توان پرش و اسپک'],
+            ['coach_id' => $coachOne->id, 'team_id' => $teams['U17-M']->id, 'athlete_id' => null, 'description' => 'سه جلسه در هفته با تمرکز روی تکنیک فرود، انفجار پا و گام آخر اسپک.', 'starts_on' => '2026-10-20', 'ends_on' => '2026-11-20', 'status' => 'active'],
+        );
+        foreach ([
+            ['روز اول', 'پرش جفت روی باکس', 'jump', 4, 8, null, 60, 'فرود نرم و زانوها در راستای پنجه پا باشد.'],
+            ['روز اول', 'اسکوات وزن بدن', 'strength', 3, 15, null, 45, 'دامنه کامل و ریتم کنترل‌شده.'],
+            ['روز دوم', 'گام آخر اسپک', 'spike', 5, 6, null, 40, 'تمرکز روی ریتم دو گام آخر.'],
+            ['روز دوم', 'سرویس هدف‌دار', 'serve', 4, 10, null, 30, 'هر ست یک منطقه متفاوت زمین.'],
+            ['روز سوم', 'ریکاوری و کشش پویا', 'recovery', null, null, 15, null, 'بدون درد و با تنفس آرام.'],
+        ] as $index => [$day, $title, $category, $sets, $reps, $duration, $rest, $notes]) {
+            $workout->exercises()->updateOrCreate(['title' => $title], ['day_label' => $day, 'category' => $category, 'sets' => $sets, 'reps' => $reps, 'duration_minutes' => $duration, 'rest_seconds' => $rest, 'notes' => $notes, 'sort_order' => $index]);
         }
 
         foreach ([
