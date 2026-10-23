@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -19,14 +20,24 @@ class FinanceController extends Controller
 {
     public function mine(Request $request): Response
     {
-        $athleteIds = \App\Models\Athlete::query()->visibleTo($request->user())->pluck('id');
-        $invoices = Invoice::query()->where('club_id', $request->user()->club_id)->whereIn('athlete_id', $athleteIds)
+        $profiles = \App\Models\Athlete::query()->visibleTo($request->user())->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'photo_path']);
+        $selectedId = $request->integer('athlete');
+        $selected = $profiles->firstWhere('id', $selectedId) ?? $profiles->first();
+        $invoices = Invoice::query()->where('club_id', $request->user()->club_id)
+            ->when($selected, fn (Builder $query) => $query->where('athlete_id', $selected->id), fn (Builder $query) => $query->whereRaw('1 = 0'))
             ->with(['athlete.teams:id,name'])
             ->withSum(['payments as paid_amount' => fn (Builder $query) => $query->where('status', 'successful')], 'amount')
             ->orderByDesc('due_date')->get()->map(fn (Invoice $invoice) => $this->invoiceData($invoice));
 
         return Inertia::render('Finance/MyInvoices', [
             'invoices' => $invoices,
+            'viewer' => ['mode' => $request->user()->role->value],
+            'profiles' => $profiles->map(fn ($profile) => [
+                'id' => $profile->id,
+                'name' => $profile->full_name,
+                'photo_url' => $profile->photo_path ? Storage::disk('public')->url($profile->photo_path) : null,
+            ]),
+            'selectedAthlete' => $selected ? ['id' => $selected->id, 'name' => $selected->full_name] : null,
             'summary' => [
                 'total' => $invoices->sum('payable'),
                 'paid' => $invoices->sum('paid'),

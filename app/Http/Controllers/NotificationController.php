@@ -27,7 +27,9 @@ class NotificationController extends Controller
         $notifications = $user->clubNotifications()->with('sender:id,name')->latest('sent_at')->paginate(12)->withQueryString()
             ->through(fn (ClubNotification $notification) => $this->notificationData($notification));
 
-        return Inertia::render('Notifications/Index', [
+        $page = $user->hasRole(UserRole::Athlete, UserRole::Guardian) ? 'Notifications/Member' : 'Notifications/Index';
+
+        return Inertia::render($page, [
             'notifications' => $notifications,
             'summary' => [
                 'unread' => $user->clubNotifications()->whereNull('read_at')->count(),

@@ -9,6 +9,7 @@ use App\Models\Team;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,11 +45,22 @@ class AssessmentController extends Controller
 
     public function mine(Request $request): Response
     {
-        $athlete = Athlete::query()->visibleTo($request->user())->with('teams:id,name')->first();
+        $profiles = Athlete::query()->visibleTo($request->user())->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'photo_path']);
+        $selectedId = $request->integer('athlete');
+        $selected = $profiles->firstWhere('id', $selectedId) ?? $profiles->first();
+        $athlete = $selected ? Athlete::query()->visibleTo($request->user())->with('teams:id,name')->find($selected->id) : null;
+        $memberProps = [
+            'viewer' => ['mode' => $request->user()->role->value],
+            'profiles' => $profiles->map(fn (Athlete $profile) => [
+                'id' => $profile->id,
+                'name' => $profile->full_name,
+                'photo_url' => $profile->photo_path ? Storage::disk('public')->url($profile->photo_path) : null,
+            ]),
+        ];
         if (! $athlete) {
-            return Inertia::render('Assessments/Show', ['athlete' => null, 'assessments' => [], 'progress' => [], 'canRecord' => false]);
+            return Inertia::render('Assessments/MyPerformance', [...$memberProps, 'athlete' => null, 'assessments' => [], 'progress' => []]);
         }
-        return $this->historyResponse($request, $athlete, 'Assessments/Show');
+        return $this->historyResponse($request, $athlete, 'Assessments/MyPerformance', $memberProps);
     }
 
     public function store(Request $request, Athlete $athlete): RedirectResponse
@@ -71,7 +83,7 @@ class AssessmentController extends Controller
         return back()->with('success', 'ارزیابی ورزشی ثبت شد و نمودار پیشرفت به‌روزرسانی گردید.');
     }
 
-    private function historyResponse(Request $request, Athlete $athlete, string $page): Response
+    private function historyResponse(Request $request, Athlete $athlete, string $page, array $extra = []): Response
     {
         $athlete->load('teams:id,name');
         $assessments = $athlete->performanceAssessments()->with('recorder:id,name')->orderByDesc('assessment_date')->get();
@@ -80,7 +92,8 @@ class AssessmentController extends Controller
         $metrics = ['height_cm', 'weight_kg', 'vertical_jump_cm', 'standing_reach_cm', 'spike_reach_cm', 'block_reach_cm', 'agility_seconds'];
 
         return Inertia::render($page, [
-            'athlete' => ['id' => $athlete->id, 'name' => $athlete->full_name, 'membership_number' => $athlete->membership_number, 'team' => $athlete->teams->first()?->name, 'position' => $athlete->position, 'jersey_number' => $athlete->jersey_number],
+            ...$extra,
+            'athlete' => ['id' => $athlete->id, 'name' => $athlete->full_name, 'membership_number' => $athlete->membership_number, 'team' => $athlete->teams->first()?->name, 'position' => $athlete->position, 'jersey_number' => $athlete->jersey_number, 'photo_url' => $athlete->photo_path ? Storage::disk('public')->url($athlete->photo_path) : null],
             'assessments' => $assessments->map(fn (PerformanceAssessment $assessment) => $this->assessmentData($assessment)),
             'progress' => collect($metrics)->mapWithKeys(fn (string $metric) => [$metric => $latest?->{$metric} !== null && $previous?->{$metric} !== null ? round($latest->{$metric} - $previous->{$metric}, 1) : null]),
             'canRecord' => $request->user()->hasRole(UserRole::ClubAdmin, UserRole::Coach),
