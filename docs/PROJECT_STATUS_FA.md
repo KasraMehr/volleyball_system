@@ -1,7 +1,7 @@
 # سند وضعیت سامانه «والیبال من»
 
-**نسخه سند:** 1.2  
-**نسخه محصول:** 0.9.2 MVP  
+**نسخه سند:** 1.3  
+**نسخه محصول:** 0.9.3 MVP  
 **تاریخ تهیه:** ۲۹ مهر ۱۴۰۵ / 21 October 2026  
 **وضعیت:** آماده ارائه و اجرای آزمایشی در باشگاه
 
@@ -152,6 +152,12 @@
 - یادآوری تمرین‌های سه روز آینده
 - ثبت فرستنده، زمان، نوع و وضعیت تحویل
 - آماده بودن ساختار کانال برای اتصال پیامک
+- Outbox مستقل پیامک و ثبت چرخه ارسال
+- صف `notifications` برای ارسال غیرهمزمان
+- سه تلاش خودکار با Backoff افزایشی
+- نمایش وضعیت، خطای Provider و تعداد تلاش
+- تلاش مجدد دستی توسط مدیر یا مسئول مالی
+- Provider آزمایشی قابل‌تعویض با سرویس‌دهنده واقعی
 
 ### ۳.۱۱ تاریخچه فعالیت و ممیزی
 
@@ -195,7 +201,7 @@
 
 ### موجودیت‌های اصلی داده
 
-`clubs`, `users`, `teams`, `coach_assignments`, `athletes`, `athlete_guardians`, `team_memberships`, `training_sessions`, `attendance_records`, `fee_plans`, `invoices`, `payments`, `payment_attempts`, `performance_assessments`, `venues`, `seasons`, `club_notifications`, `activity_logs`
+`clubs`, `users`, `teams`, `coach_assignments`, `athletes`, `athlete_guardians`, `team_memberships`, `training_sessions`, `attendance_records`, `fee_plans`, `invoices`, `payments`, `payment_attempts`, `performance_assessments`, `venues`, `seasons`, `club_notifications`, `sms_outbox`, `activity_logs`
 
 ## ۶. حساب‌های نمایشی
 
@@ -211,14 +217,14 @@
 
 این حساب‌ها صرفاً برای دمو هستند و پیش از استقرار باید حذف یا رمز آن‌ها تغییر کند.
 
-## ۷. وضعیت نسخه 0.9.2
+## ۷. وضعیت نسخه 0.9.3
 
 نسخه حاضر یک MVP کامل برای ارائه، دریافت بازخورد و اجرای پایلوت است. گردش‌های اصلی کسب‌وکار از ثبت ورزشکار تا حضور، شهریه، پرداخت، ارزیابی و گزارش به یکدیگر متصل‌اند.
 
 ### موارد لازم پیش از Production
 
 1. انتخاب درگاه بانکی و افزودن Adapter آن با مرچنت‌کد واقعی
-2. انتخاب سرویس پیامک و ثبت API Key
+2. انتخاب سرویس پیامک و افزودن Adapter آن با API Key واقعی
 3. انتقال دیتابیس به PostgreSQL
 4. تنظیم Queue و Cache با Redis
 5. دامنه، SSL و تنظیمات سرور
@@ -238,7 +244,7 @@
 ### نسخه 1.0.0
 
 - اتصال Adapter درگاه منتخب با مرچنت‌کد واقعی
-- پیامک واقعی
+- اتصال Adapter پیامک منتخب با API Key واقعی
 - استقرار Production و پشتیبان‌گیری
 
 ### نسخه 1.1.0
